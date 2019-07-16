@@ -13,6 +13,7 @@ let myCanvas = {
     context,
     data: [],
     step: -1,
+    tinyStep: -1,
     time: -1,
     lastPoint: { x: 0, y: 0 },
     drawing: false,
@@ -24,8 +25,9 @@ let myCanvas = {
     clear,
     back,
     drawLine,
-    setSize, 
-    playBack
+    setSize,
+    playBack,
+    render,
 }
 
 function bindEvent() {
@@ -38,13 +40,8 @@ function bindEvent() {
 
 function listenerToMouse() {
     let handleMousedown = (e) => {
-        if (this.time === -1) {
-            this.time = Date.now()
-        }
-        this.lastPoint = { x: e.clientX, y: e.clientY }
-        this.drawing = true
-        this.step++
-        this.data[this.step] = []
+        let newPonit = { x: e.clientX, y: e.clientY }
+        this.handleDrawing(newPonit, 'start')
     }
 
     let handleMouseMove = (e) => {
@@ -55,8 +52,7 @@ function listenerToMouse() {
 
     let handleMouseUp = (e) => {
         let newPonit = { x: e.clientX, y: e.clientY }
-        this.handleDrawing(newPonit)
-        this.drawing = false
+        this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('mousedown', handleMousedown)
     this.el.addEventListener('mousemove', handleMouseMove)
@@ -65,38 +61,54 @@ function listenerToMouse() {
 
 function listenerToTouch() {
     let handleTouchStart = (e) => {
-        if (this.time === -1) {
-            this.time = Date.now()
-        }
-        this.lastPoint = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-        this.drawing = true
-        this.step++
-        this.data[this.step] = []
+        let newPonit = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        this.handleDrawing(newPonit, 'start')
     }
 
     let handleTouchMove = (e) => {
         let newPonit = { x: e.touches[0].clientX, y: e.touches[0].clientY }
-        this.handleDrawing(newPonit)
-        e.s
+        this.handleDrawing(newPonit, 'move')
     }
 
     let handleTouchEnd = (e) => {
         let newPonit = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }
-        this.handleDrawing(newPonit)
-        this.drawing = false
+        this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('touchstart', handleTouchStart)
     this.el.addEventListener('touchmove', handleTouchMove)
     this.el.addEventListener('touchend', handleTouchEnd)
 }
 
-function handleDrawing(newPonit) {
-    if (this.drawing) {
-        let currentTime = Date.now() - this.time
-        this.data[this.step].push({ start: this.lastPoint, end: newPonit, time: currentTime })
-        this.drawLine(this.lastPoint, newPonit)
+function handleDrawing(newPonit, type) {
+    if (type === 'start') {
+        if (this.time === -1) {
+            this.time = Date.now()
+        }
+        this.drawing = true
+        this.step++
+        this.data[this.step] = []
         this.lastPoint = newPonit
+    } else {
+        let needRecond = true
+        if (this.drawing && needRecond) {
+            needRecond = false
+            let currentTime = Date.now() - this.time
+            this.data[this.step].push({ start: this.lastPoint, end: newPonit, time: currentTime })
+            this.tinyStep++
+            this.render()
+            this.lastPoint = newPonit
+            needRecond = true
+        }
     }
+
+    if (type === 'end') {
+        this.drawing = false
+        this.tinyStep = -1
+        console.log('end')
+    }
+
+
+
 }
 
 function drawLine(point1, point2) {
@@ -104,9 +116,14 @@ function drawLine(point1, point2) {
     this.context.strokeStyle = 'black'
     this.context.lineCap = 'round'
     this.context.lineJoin = 'round'
-    this.context.lineWidth = 5
+    this.context.lineWidth = 6
     this.context.moveTo(point1.x, point1.y)
-    this.context.lineTo(point2.x, point2.y)
+    // this.context.lineTo(point2.x, point2.y)
+    let midPointX = point1.x + (point2.x - point1.x) / 2
+    let midPointY = point1.y + (point2.y - point1.y) / 2
+    this.context.quadraticCurveTo(midPointX, midPointY, point2.x, point2.y);
+    this.context.shadowBlur = 3
+    this.context.shadowColor = 'rgb(0, 0, 0)'
     this.context.stroke()
     this.context.closePath()
 }
@@ -116,6 +133,12 @@ function clear() {
     this.context.fillStyle = 'white'
     this.context.fillRect(0, 0, this.el.width, this.el.height);
     this.context.restore();
+}
+
+function render() {
+    let data = this.data
+    let path = data[this.step][this.tinyStep]
+    this.drawLine(path.start, path.end)
 }
 
 function back() {
@@ -149,17 +172,17 @@ myCanvas.bindEvent()
 
 clearButton.addEventListener('click', (e) => {
     myCanvas.clear()
-    console.log('d0')
+    console.log('')
 })
 
 backButton.addEventListener('click', (e) => {
     myCanvas.back()
 })
 
-playButton.addEventListener('click',(e)=>{
+playButton.addEventListener('click', (e) => {
     myCanvas.playBack()
 })
 
 document.body.addEventListener('touchmove', function (e) {
     e.preventDefault();
-},{passive: false})
+}, { passive: false })
