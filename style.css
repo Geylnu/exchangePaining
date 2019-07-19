@@ -112,6 +112,7 @@ body {
 .buttonList{
     display: flex;
     padding: 6px 10px;
+    margin-top: -20px;
     border-radius: 55px;
     width: 90%;
     justify-content: space-between;

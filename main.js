@@ -5,8 +5,8 @@
 
 let canvasEl = document.querySelector('#myCanvas')
 let clearButton = document.querySelector('.clear')
-let playButton = document.querySelector('.play')
-let backButton = document.querySelector('.back')
+let lastStep = document.querySelector('.lastStep')
+let nextStep = document.querySelector('.nextStep')
 
 /** 阻止默认滚动事件，防止下拉等情况 */
 document.body.addEventListener('touchmove', function (e) {
@@ -15,6 +15,7 @@ document.body.addEventListener('touchmove', function (e) {
 
 let context = canvasEl.getContext('2d')
 let myCanvas = {
+    init,
     el: canvasEl,
     context,
     data: [],
@@ -23,6 +24,7 @@ let myCanvas = {
     time: -1,
     lastPoint: { x: 0, y: 0 },
     drawing: false,
+    status: 'normal',
     bindEvent,
     removeEvent: null,
     listenerToMouse,
@@ -30,6 +32,7 @@ let myCanvas = {
     handleDrawing,
     clear,
     back,
+    next,
     drawLine,
     setSize,
     playBack,
@@ -95,19 +98,19 @@ function listenerToTouch() {
     let matrixString = transform.match(/\(([^)]*)\)/)[1]
     let stringArray = matrixString.split(',')
     let matrix = []
-    stringArray.forEach((value)=>{
+    stringArray.forEach((value) => {
         matrix.push(parseFloat(value))
     })
 
 
-    function transformFix({x,y}){
-        x = x -left - origin.x
-        y =y -top - origin.y
-        x= matrix[0]*x + (-matrix[2]*y) +matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
-        y= (-matrix[1]*x) + matrix[3]*y + matrix[5]
-        x+=origin.x
-        y+=origin.y
-        return {x,y}
+    function transformFix({ x, y }) {
+        x = x - left - origin.x
+        y = y - top - origin.y
+        x = matrix[0] * x + (-matrix[2] * y) + matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
+        y = (-matrix[1] * x) + matrix[3] * y + matrix[5]
+        x += origin.x
+        y += origin.y
+        return { x, y }
     }
 
 
@@ -141,6 +144,16 @@ function handleDrawing(newPonit, type) {
         if (this.time === -1) {
             this.time = Date.now()
         }
+
+        if (this.status === 'middle') {
+            console.log(this.data)
+            this.data = this.data.slice(0, this.step + 1)
+            console.log(this.data)
+            console.log('-----------------------')
+        } else {
+            this.status = 'normal'
+        }
+
         this.drawing = true
         this.step++
         this.data[this.step] = []
@@ -175,7 +188,7 @@ function drawLine(point1, point2) {
     this.context.lineWidth = 6
     this.context.moveTo(point1.x, point1.y)
     this.context.lineTo(point2.x, point2.y)
-    this.context.shadowBlur = 3
+    this.context.shadowBlur = 2
     this.context.shadowColor = 'rgb(0, 0, 0)'
     this.context.stroke()
     this.context.closePath()
@@ -194,15 +207,44 @@ function render() {
     this.drawLine(path.start, path.end)
 }
 
+function init() {
+    this.data = []
+    this.step = -1
+    this.tinyStep = -1
+    this.time = -1
+    this.status = 'normal'
+}
+
 function back() {
-    this.clear()
     let data = this.data
-    data.pop()
-    data.forEach((step) => {
-        step.forEach((path) => {
-            this.drawLine(path.start, path.end)
-        })
-    })
+    this.clear()
+    if (this.step !== -1) {
+        this.step--
+        this.status = 'middle'
+        for (i = 0; i <= this.step; i++) {
+            let stepArray = data[i]
+            stepArray.forEach((path) => {
+                this.drawLine(path.start, path.end)
+            })
+        }
+    } else {
+        this.clear()
+        this.init()
+    }
+}
+
+function next() {
+    let data = this.data
+    if (this.status = 'middle' && data[this.step + 1]) {
+        this.clear()
+        this.step++
+        for (i = 0; i <= this.step; i++) {
+            let stepArray = data[i]
+            stepArray.forEach((path) => {
+                this.drawLine(path.start, path.end)
+            })
+        }
+    }
 }
 
 function playBack() {
@@ -232,6 +274,20 @@ clearButton.addEventListener('animationend', (e) => {
     e.currentTarget.classList.remove('play')
     myCanvas.el.classList.remove('play')
     myCanvas.clear()
-    this.data = []
+    myCanvas.init()
 })
 
+let timer = 0
+lastStep.addEventListener('click', () => {
+    window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+        myCanvas.back()
+    }, 100)
+})
+
+nextStep.addEventListener('click', () => {
+    window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+        myCanvas.next()
+    }, 100)
+})
