@@ -1,4 +1,168 @@
-* { padding: 0px; margin: 0px } 
-.buttonList {position: absolute; left: 10px; top: 10px; } 
-canvas {display: block}
-body {overscroll-behavior: contain}
+* {
+    padding: 0px;
+    margin: 0px;
+}
+
+body {
+    /* 阻止默认滚动效果 */
+    overscroll-behavior: contain;
+    overflow-y: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+.icon {
+    width: 1em; height: 1em;
+    vertical-align: -0.15em;
+    fill: currentColor;
+    overflow: hidden;
+ }
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    max-width: 350px;
+    margin: auto;
+}
+
+.drawingBoard {
+    margin-top: 20px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #2f2f2f;
+    width: 320px;
+    height: 500px;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0px 2px 2px 1px #151515;
+}
+
+.drawingBoard .paper {
+    position: absolute;
+    top: 20px;
+    background-color: white;
+    width: calc(100% - 30px);
+    height: calc(100% - 50px);
+    border-radius: 8px;
+    box-shadow: 0px 1px 3px 0px gray;
+    /* border: red solid 1px; */
+}
+
+.drawingBoard .paper:nth-child(1) {
+    transform: rotate(0.5deg);
+}
+
+.drawingBoard .paper:nth-child(2) {
+    transform: rotate(-0.5deg);
+}
+
+.drawingBoard .paper:nth-child(3) {
+    transform: rotate(-1.5deg);
+}
+
+.drawingBoard .paper:nth-child(4) {
+    top: 15px;
+    transform: rotate(-2deg);
+}
+
+.drawingBoard canvas {
+    display: block
+}
+
+.drawingBoard img.clip{
+    position: absolute;
+    z-index: 10;
+    width: 75px;
+    height: 55px;
+}
+
+.drawingBoard img.clip.blue {
+    top: -31px;
+    left: 15%;
+    transform: rotate(-3deg);
+}
+
+.drawingBoard img.clip.yellow{
+    top: -32px;
+    transform: rotate(-3deg);
+    right: 15%;
+    transform: rotate(1deg);
+}
+
+.buttonList-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1 0 auto;
+    width: 100%;
+}
+
+
+.buttonList{
+    display: flex;
+    padding: 6px 10px;
+    border-radius: 55px;
+    width: 90%;
+    justify-content: space-between;
+    box-shadow: 0px 1px 3px 0px rgb(117, 117, 117);
+}
+
+.buttonList .exchange{
+    display: flex;
+    align-items: center;
+    background-color: #f0f456;
+    width: 4em;
+    border: none;
+    font-size: 22px;
+    padding: 0.4em 0.6em;
+    border-radius: 1em;
+    color: #197ab3;
+    overflow: hidden;
+}
+
+
+/* 使用字体：华康海报简体 */
+.buttonList .exchange img{
+    height: 1em;
+}
+
+.buttonList .icon{
+    width: 25px;
+    height: 25px;
+    padding: 10px;
+    fill:	#51B5ED;
+    border-radius: 50%;
+    transition: all 0.3s;
+    background-color: white
+}
+
+.buttonList .icon:active{
+    background-color: rgb(216, 216, 216);
+
+}
+
+.buttonList .icon.clear.play{
+    animation: rotate 1 forwards 0.5s
+}
+
+@keyframes rotate{
+    from{
+        transform: rotate(0deg)
+    }
+    to{
+        transform: rotate(360deg)
+    }
+}
+
+@media (max-width: 350px){
+    .container{
+        transform: scale(0.85,0.85);
+        margin-top: 50px;
+    }
+}
+

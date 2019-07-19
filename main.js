@@ -2,10 +2,24 @@
  * canvas API 参考文档 www.canvasapi.cn
  * */
 
+
 let canvasEl = document.querySelector('#myCanvas')
 let clearButton = document.querySelector('.clear')
 let playButton = document.querySelector('.play')
 let backButton = document.querySelector('.back')
+
+/** 阻止默认滚动事件，防止下拉等情况 */
+document.body.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+}, { passive: false })
+
+clearButton.addEventListener('click',(e)=>[
+    e.currentTarget.classList.add('play')
+])
+
+clearButton.addEventListener('animationend',(e)=>{
+    e.currentTarget.classList.remove('play')
+})
 
 let context = canvasEl.getContext('2d')
 let myCanvas = {
@@ -38,20 +52,22 @@ function bindEvent() {
     }
 }
 
+/**对于 */
 function listenerToMouse() {
     let handleMousedown = (e) => {
-        let newPonit = { x: e.clientX, y: e.clientY }
+        let newPonit = { x: e.offsetX, y: e.offsetY }
+        console.log(e)
         this.handleDrawing(newPonit, 'start')
     }
 
     let handleMouseMove = (e) => {
-        let newPonit = { x: e.clientX, y: e.clientY }
+        let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit)
         e.s
     }
 
     let handleMouseUp = (e) => {
-        let newPonit = { x: e.clientX, y: e.clientY }
+        let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('mousedown', handleMousedown)
@@ -60,18 +76,29 @@ function listenerToMouse() {
 }
 
 function listenerToTouch() {
+    let currentTarget = this.el
+        let top = this.el.offsetTop
+        let left = this.el.offsetLeft
+        
+        while (currentTarget.offsetParent !==null){
+            currentTarget = currentTarget.offsetParent
+            top+=currentTarget.offsetTop
+            left+=currentTarget.offsetLeft
+        }
+
+
     let handleTouchStart = (e) => {
-        let newPonit = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        let newPonit = { x: e.touches[0].clientX-left, y: e.touches[0].clientY-top }
         this.handleDrawing(newPonit, 'start')
     }
 
     let handleTouchMove = (e) => {
-        let newPonit = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+        let newPonit = { x: e.touches[0].clientX-left, y: e.touches[0].clientY-top }
         this.handleDrawing(newPonit, 'move')
     }
 
     let handleTouchEnd = (e) => {
-        let newPonit = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY }
+        let newPonit = { x: e.changedTouches[0].clientX-left, y: e.changedTouches[0].clientY-top }
         this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('touchstart', handleTouchStart)
@@ -104,7 +131,6 @@ function handleDrawing(newPonit, type) {
     if (type === 'end') {
         this.drawing = false
         this.tinyStep = -1
-        console.log('end')
     }
 
 
@@ -164,25 +190,22 @@ function playBack() {
 }
 
 function setSize() {
-    this.el.width = document.documentElement.clientWidth
-    this.el.height = document.documentElement.clientHeight
+    this.el.width = 320
+    this.el.height = 480
 }
 myCanvas.setSize()
 myCanvas.bindEvent()
 
 clearButton.addEventListener('click', (e) => {
     myCanvas.clear()
-    console.log('')
 })
 
 backButton.addEventListener('click', (e) => {
     myCanvas.back()
 })
 
-playButton.addEventListener('click', (e) => {
-    myCanvas.playBack()
-})
+// playButton.addEventListener('click', (e) => {
+//     myCanvas.playBack()
+// })
 
-document.body.addEventListener('touchmove', function (e) {
-    e.preventDefault();
-}, { passive: false })
+

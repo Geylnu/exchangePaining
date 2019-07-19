@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-cmn-Hans">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,user-scalable=no">
@@ -9,12 +10,34 @@
 </head>
 
 <body>
-    <canvas id="myCanvas"></canvas>
-    <div class="buttonList">
-        <button class="back">回退</button>
-        <button class="play">演示动画</button>
-        <button class="clear">清楚</button>
+    <div class="container">
+        <div class="drawingBoard">
+            <div class="paper"></div>
+            <div class="paper"></div>
+            <div class="paper"></div>
+            <canvas id="myCanvas" class="paper"></canvas>
+            <img src="./img/clip-yellow.svg" class="clip yellow" alt="黄色夹子">
+            <img src="./img/clip-blue.svg" class=" clip blue" alt="蓝色夹子">
+        </div>
+        <div class="buttonList-wrapper">
+            <div class="buttonList">
+                <svg class="icon clear" aria-hidden="true">
+                    <use xlink:href="#icon-zhongshi"></use>
+                </svg>
+                <svg class="icon lastStep" aria-hidden="true">
+                    <use xlink:href="#icon-shangyibu"></use>
+                </svg>
+                <svg class="icon nextStep" aria-hidden="true">
+                    <use xlink:href="#icon-xiayibu"></use>
+                </svg>
+                <a href="" class="exchange">
+                    <img src="./img/exchange.png" alt="">
+                </a>
+            </div>
+        </div>
     </div>
+    <script src="//at.alicdn.com/t/font_1302509_eledm7rtaus.js
+    "></script>
     <script src="./main.js"></script>
 </body>
 
