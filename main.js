@@ -13,11 +13,11 @@ document.body.addEventListener('touchmove', function (e) {
     e.preventDefault();
 }, { passive: false })
 
-clearButton.addEventListener('click',(e)=>[
+clearButton.addEventListener('click', (e) => [
     e.currentTarget.classList.add('play')
 ])
 
-clearButton.addEventListener('animationend',(e)=>{
+clearButton.addEventListener('animationend', (e) => {
     e.currentTarget.classList.remove('play')
 })
 
@@ -52,11 +52,10 @@ function bindEvent() {
     }
 }
 
-/**对于 */
+/**对于transform的元素，offset的坐标系是相对于元素内的，因此不受影响 */
 function listenerToMouse() {
     let handleMousedown = (e) => {
         let newPonit = { x: e.offsetX, y: e.offsetY }
-        console.log(e)
         this.handleDrawing(newPonit, 'start')
     }
 
@@ -77,28 +76,67 @@ function listenerToMouse() {
 
 function listenerToTouch() {
     let currentTarget = this.el
-        let top = this.el.offsetTop
-        let left = this.el.offsetLeft
-        
-        while (currentTarget.offsetParent !==null){
-            currentTarget = currentTarget.offsetParent
-            top+=currentTarget.offsetTop
-            left+=currentTarget.offsetLeft
-        }
+    let top = this.el.offsetTop
+    let left = this.el.offsetLeft
+
+    while (currentTarget.offsetParent !== null) {
+        currentTarget = currentTarget.offsetParent
+        top += currentTarget.offsetTop
+        left += currentTarget.offsetLeft
+    }
+
+    /**
+     * 本部分修正transform带来的坐标畸变参考了以下文档
+     * https://www.zhangxinxu.com/wordpress/2012/06/css3-transform-matrix-%e7%9f%a9%e9%98%b5/comment-page-3/#comment-397082
+     * https://juejin.im/entry/5b15ffa0e51d4506be266bac
+     */
+
+    let style = window.getComputedStyle(this.el)
+    let transform = style.transform
+    let transformOrigin = style.transformOrigin
+
+    let originArray = transformOrigin.split(' ')
+    let origin = {}
+    origin.x = parseInt(originArray[0])
+    origin.y = parseInt(originArray[1])
+
+    let matrixString = transform.match(/\(([^)]*)\)/)[1]
+    let stringArray = matrixString.split(',')
+    let matrix = []
+    stringArray.forEach((value)=>{
+        matrix.push(parseFloat(value))
+    })
+
+
+    function transformFix({x,y}){
+        x = x -left - origin.x
+        y =y -top - origin.y
+        x= matrix[0]*x + (-matrix[2]*y) +matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
+        y= (-matrix[1]*x) + matrix[3]*y + matrix[5]
+        x+=origin.x
+        y+=origin.y
+        return {x,y}
+    }
 
 
     let handleTouchStart = (e) => {
-        let newPonit = { x: e.touches[0].clientX-left, y: e.touches[0].clientY-top }
+        let x = e.touches[0].clientX
+        let y = e.touches[0].clientY
+        let newPonit = transformFix({ x, y })
         this.handleDrawing(newPonit, 'start')
     }
 
     let handleTouchMove = (e) => {
-        let newPonit = { x: e.touches[0].clientX-left, y: e.touches[0].clientY-top }
+        let x = e.touches[0].clientX
+        let y = e.touches[0].clientY
+        let newPonit = transformFix({ x, y })
         this.handleDrawing(newPonit, 'move')
     }
 
     let handleTouchEnd = (e) => {
-        let newPonit = { x: e.changedTouches[0].clientX-left, y: e.changedTouches[0].clientY-top }
+        let x = e.changedTouches[0].clientX
+        let y = e.changedTouches[0].clientY
+        let newPonit = transformFix({ x, y })
         this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('touchstart', handleTouchStart)
@@ -144,10 +182,7 @@ function drawLine(point1, point2) {
     this.context.lineJoin = 'round'
     this.context.lineWidth = 6
     this.context.moveTo(point1.x, point1.y)
-    // this.context.lineTo(point2.x, point2.y)
-    let midPointX = point1.x + (point2.x - point1.x) / 2
-    let midPointY = point1.y + (point2.y - point1.y) / 2
-    this.context.quadraticCurveTo(midPointX, midPointY, point2.x, point2.y);
+    this.context.lineTo(point2.x, point2.y)
     this.context.shadowBlur = 3
     this.context.shadowColor = 'rgb(0, 0, 0)'
     this.context.stroke()
@@ -203,9 +238,5 @@ clearButton.addEventListener('click', (e) => {
 backButton.addEventListener('click', (e) => {
     myCanvas.back()
 })
-
-// playButton.addEventListener('click', (e) => {
-//     myCanvas.playBack()
-// })
 
 
