@@ -53,20 +53,22 @@ function listenerToMouse() {
         let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit, 'start')
     }
-
     let handleMouseMove = (e) => {
         let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit)
-        e.s
     }
-
     let handleMouseUp = (e) => {
+        let newPonit = { x: e.offsetX, y: e.offsetY }
+        this.handleDrawing(newPonit, 'end')
+    }
+    let handleMouseLeave = (e)=> {
         let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('mousedown', handleMousedown)
     this.el.addEventListener('mousemove', handleMouseMove)
     this.el.addEventListener('mouseup', handleMouseUp)
+    this.el.addEventListener('mouseleave',handleMouseLeave)
 }
 
 function listenerToTouch() {
@@ -291,3 +293,4 @@ nextStep.addEventListener('click', () => {
         myCanvas.next()
     }, 100)
 })
+
