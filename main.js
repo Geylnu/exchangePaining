@@ -2,7 +2,6 @@
  * canvas API 参考文档 www.canvasapi.cn
  * */
 
-
 let canvasEl = document.querySelector('#myCanvas')
 let clearButton = document.querySelector('.clear')
 let lastStep = document.querySelector('.lastStep')
