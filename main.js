@@ -13,14 +13,6 @@ document.body.addEventListener('touchmove', function (e) {
     e.preventDefault();
 }, { passive: false })
 
-clearButton.addEventListener('click', (e) => [
-    e.currentTarget.classList.add('play')
-])
-
-clearButton.addEventListener('animationend', (e) => {
-    e.currentTarget.classList.remove('play')
-})
-
 let context = canvasEl.getContext('2d')
 let myCanvas = {
     el: canvasEl,
@@ -91,7 +83,7 @@ function listenerToTouch() {
      * https://juejin.im/entry/5b15ffa0e51d4506be266bac
      */
 
-    let style = window.getComputedStyle(this.el)
+    let style = window.getComputedStyle(this.el.parentNode)
     let transform = style.transform
     let transformOrigin = style.transformOrigin
 
@@ -232,11 +224,14 @@ myCanvas.setSize()
 myCanvas.bindEvent()
 
 clearButton.addEventListener('click', (e) => {
+    e.currentTarget.classList.add('play')
+    myCanvas.el.classList.add('play')
+})
+
+clearButton.addEventListener('animationend', (e) => {
+    e.currentTarget.classList.remove('play')
+    myCanvas.el.classList.remove('play')
     myCanvas.clear()
+    this.data = []
 })
-
-backButton.addEventListener('click', (e) => {
-    myCanvas.back()
-})
-
 
