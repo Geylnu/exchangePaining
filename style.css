@@ -51,6 +51,7 @@ body {
     border-radius: 8px;
     box-shadow: 0px 1px 3px 0px gray;
     overflow: hidden;
+    user-select: none;
     /* border: red solid 1px; */
 }
 
@@ -73,6 +74,8 @@ body {
 
 .drawingBoard canvas {
     display: block;
+    user-select: none;
+    cursor: crosshair;
 }
 
 .drawingBoard canvas.play {
@@ -85,6 +88,7 @@ body {
     z-index: 10;
     width: 75px;
     height: 55px;
+    user-select: none;
 }
 
 .drawingBoard img.clip.blue {
@@ -130,6 +134,7 @@ body {
     border-radius: 1em;
     color: #197ab3;
     overflow: hidden;
+    user-select: none;
 }
 
 

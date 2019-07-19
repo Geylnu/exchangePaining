@@ -71,6 +71,11 @@ function listenerToMouse() {
     this.el.addEventListener('mouseleave',handleMouseLeave)
 }
 
+/**
+ * 本部分修正transform带来的坐标畸变参考了以下文档
+ * https://www.zhangxinxu.com/wordpress/2012/06/css3-transform-matrix-%e7%9f%a9%e9%98%b5/comment-page-3/#comment-397082
+ * https://juejin.im/entry/5b15ffa0e51d4506be266bac
+ */
 function listenerToTouch() {
     let currentTarget = this.el
     let top = this.el.offsetTop
@@ -81,12 +86,6 @@ function listenerToTouch() {
         top += currentTarget.offsetTop
         left += currentTarget.offsetLeft
     }
-
-    /**
-     * 本部分修正transform带来的坐标畸变参考了以下文档
-     * https://www.zhangxinxu.com/wordpress/2012/06/css3-transform-matrix-%e7%9f%a9%e9%98%b5/comment-page-3/#comment-397082
-     * https://juejin.im/entry/5b15ffa0e51d4506be266bac
-     */
 
     let style = window.getComputedStyle(this.el.parentNode)
     let transform = style.transform
@@ -146,16 +145,11 @@ function handleDrawing(newPonit, type) {
         if (this.time === -1) {
             this.time = Date.now()
         }
-
         if (this.status === 'middle') {
-            console.log(this.data)
             this.data = this.data.slice(0, this.step + 1)
-            console.log(this.data)
-            console.log('-----------------------')
         } else {
             this.status = 'normal'
         }
-
         this.drawing = true
         this.step++
         this.data[this.step] = []
@@ -177,9 +171,6 @@ function handleDrawing(newPonit, type) {
         this.drawing = false
         this.tinyStep = -1
     }
-
-
-
 }
 
 function drawLine(point1, point2) {
