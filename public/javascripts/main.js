@@ -284,3 +284,8 @@ nextStep.addEventListener('click', () => {
     }, 100)
 })
 
+axios.get('/api/painting',{
+    params: {
+        uuid: 12333
+    }
+})
