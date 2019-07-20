@@ -159,7 +159,7 @@ body {
 }
 
 .buttonList .icon.clear.play{
-    animation: rotate 1 forwards 0.5s
+    animation: rotate 1 forwards 0.5s;
 }
 
 @keyframes disapper{
