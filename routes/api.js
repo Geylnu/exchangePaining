@@ -1,4 +1,5 @@
 const express = require('express');
+const bodyParser = require('body-parser')
 const router = express.Router();
 const Sequelize = require('sequelize')
 
@@ -6,6 +7,9 @@ const Sequelize = require('sequelize')
 const User = require('../models/user')
 const Painting = require('../models/painting')
 const uuidv4 = require('uuid/v4');
+
+router.use(bodyParser.json({ limit: '10mb' }));
+router.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
 router.all('/*', function (req, res, next) {
   let userId = req.session.userId

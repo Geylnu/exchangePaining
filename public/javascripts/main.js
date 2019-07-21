@@ -200,8 +200,8 @@ function render() {
     this.drawLine(path.start, path.end)
 }
 
-function init() {
-    this.data = []
+function init(data) {
+    this.data = data || []
     this.step = -1
     this.tinyStep = -1
     this.time = -1
@@ -287,12 +287,21 @@ nextStep.addEventListener('click', () => {
 
 exchange.addEventListener('click', async (e) => {
     e.preventDefault
+    let test = myCanvas.data
+    var binaryString = pako.deflate(JSON.stringify(test), { to: 'string' });
+    var restored = JSON.parse(pako.inflate(binaryString, { to: 'string' }));
+    console.log(binaryString)
+    console.log(restored)
+
     let path = '/api/painting'
     let res = await axios.post(path, {
         data: myCanvas.data
     })
-    if (res.status ===200){
+    if (res.status === 200) {
         let res = await axios.get(path)
-        console.log(res)
+        myCanvas.init(res.data.data)
+        myCanvas.playBack()
+    } else if (res.status === 413) {
+
     }
 })
