@@ -27,12 +27,6 @@ const Painting = sequelize.define('painting', {
     }
 });
 
-Painting.sync({ force: true }).then(() => {
-    return Painting.create({
-        uuid: 'dcb2b0df-3efb-471d-8f51-58eca1309866',
-        userId: '5e4c6455-10d9-495d-b5c8-b1480c7ea243',
-        data: '[\'test\']'
-    });
-  });
+Painting.sync()
 
   module.exports = Painting

@@ -20,11 +20,6 @@ const User = sequelize.define('user', {
     }
 });
 
-User.sync({ force: true }).then(() => {
-    return User.create({
-        uuid: '5e4c6455-10d9-495d-b5c8-b1480c7ea243',
-        role: 1
-    });
-});
+User.sync()
 
 module.exports = User

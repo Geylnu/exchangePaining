@@ -6,6 +6,7 @@ let canvasEl = document.querySelector('#myCanvas')
 let clearButton = document.querySelector('.clear')
 let lastStep = document.querySelector('.lastStep')
 let nextStep = document.querySelector('.nextStep')
+let exchange = document.querySelector('.exchange')
 
 /** 阻止默认滚动事件，防止下拉等情况 */
 document.body.addEventListener('touchmove', function (e) {
@@ -60,14 +61,14 @@ function listenerToMouse() {
         let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit, 'end')
     }
-    let handleMouseLeave = (e)=> {
+    let handleMouseLeave = (e) => {
         let newPonit = { x: e.offsetX, y: e.offsetY }
         this.handleDrawing(newPonit, 'end')
     }
     this.el.addEventListener('mousedown', handleMousedown)
     this.el.addEventListener('mousemove', handleMouseMove)
     this.el.addEventListener('mouseup', handleMouseUp)
-    this.el.addEventListener('mouseleave',handleMouseLeave)
+    this.el.addEventListener('mouseleave', handleMouseLeave)
 }
 
 /**
@@ -284,8 +285,14 @@ nextStep.addEventListener('click', () => {
     }, 100)
 })
 
-axios.get('/api/painting',{
-    params: {
-        uuid: 12333
+exchange.addEventListener('click', async (e) => {
+    e.preventDefault
+    let path = '/api/painting'
+    let res = await axios.post(path, {
+        data: myCanvas.data
+    })
+    if (res.status ===200){
+        let res = await axios.get(path)
+        console.log(res)
     }
 })
