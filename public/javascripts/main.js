@@ -288,18 +288,13 @@ nextStep.addEventListener('click', () => {
 exchange.addEventListener('click', async (e) => {
     e.preventDefault
     let test = myCanvas.data
-    var binaryString = pako.deflate(JSON.stringify(test), { to: 'string' });
-    var restored = JSON.parse(pako.inflate(binaryString, { to: 'string' }));
-    console.log(binaryString)
-    console.log(restored)
-
     let path = '/api/painting'
     let res = await axios.post(path, {
-        data: myCanvas.data
+        data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
     })
     if (res.status === 200) {
         let res = await axios.get(path)
-        myCanvas.init(res.data.data)
+        myCanvas.init(JSON.parse(res.data.data))
         myCanvas.playBack()
     } else if (res.status === 413) {
 

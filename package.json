@@ -13,6 +13,7 @@
     "express-session": "^1.16.2",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
+    "pako": "^1.0.10",
     "sequelize": "^5.10.1",
     "sqlite3": "^4.0.9",
     "uuid": "^3.3.2"

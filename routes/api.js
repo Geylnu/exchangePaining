@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const router = express.Router();
 const Sequelize = require('sequelize')
+const pako = require('pako')
 
 
 const User = require('../models/user')
@@ -47,12 +48,13 @@ router.get('/painting', function (req, res, next) {
 })
 
 router.post('/painting', function (req, res, next) {
-  let data = req.body.data
+
+  let data = pako.inflate(req.body.data,{to:'string'}) 
   if (vaildData(data)) {
     Painting.create({
       uuid: uuidv4(),
       userId: req.session.userId,
-      data: JSON.stringify(data),
+      data,
     }).then((paiting) => {
       req.session.paiting = paiting.uuid
       res.send({ status: 'success' })
