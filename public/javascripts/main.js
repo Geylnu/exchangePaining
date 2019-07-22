@@ -294,7 +294,7 @@ exchange.addEventListener('click', async (e) => {
     })
     if (res.status === 200) {
         let res = await axios.get(path)
-        myCanvas.init(JSON.parse(res.data.data))
+        myCanvas.init(res.data.data)
         myCanvas.playBack()
     } else if (res.status === 413) {
 
