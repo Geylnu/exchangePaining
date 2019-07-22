@@ -72,21 +72,73 @@ function listenerToMouse() {
 }
 
 /**
- * 本部分修正transform带来的坐标畸变参考了以下文档
+ * 本部分为修正transform带来的坐标畸变参考了以下文档
  * https://www.zhangxinxu.com/wordpress/2012/06/css3-transform-matrix-%e7%9f%a9%e9%98%b5/comment-page-3/#comment-397082
  * https://juejin.im/entry/5b15ffa0e51d4506be266bac
+ * W3C给出了没有为touch事件添加offsetX，Y的原因
+ * https://github.com/w3c/touch-events/issues/62
  */
 function listenerToTouch() {
-    let currentTarget = this.el
-    let top = this.el.offsetTop
-    let left = this.el.offsetLeft
+    let cache = []
+    function getOffsetPosition(x, y,el) {
+        if (cache.length >0){
 
-    while (currentTarget.offsetParent !== null) {
-        currentTarget = currentTarget.offsetParent
-        top += currentTarget.offsetTop
-        left += currentTarget.offsetLeft
+        }
+        let currentTarget = el
+        let top = 0
+        let left = 0
+
+        while (currentTarget !== null) {
+            top += currentTarget.offsetTop
+            left += currentTarget.offsetLeft
+            currentTarget = currentTarget.offsetParent
+        }
+
+        let style = window.getComputedStyle(el)
+        let transform = style.transform
+        let transformOrigin = style.transformOrigin
+
+        let originArray = transformOrigin.split(' ')
+        let origin = {}
+        origin.x = parseInt(originArray[0])
+        origin.y = parseInt(originArray[1])
+
+        let matrixString = transform.match(/\(([^)]*)\)/)[1]
+        let stringArray = matrixString.split(',')
+        let temp = []
+        stringArray.forEach((value) => {
+            temp.push(parseFloat(value))
+        })
+
+        temp = [
+            [temp[0], temp[2], temp[4]],
+            [temp[1], temp[3], temp[5]],
+            [0, 0, 1],
+        ]
+        temp[0][1] = -temp[0][1]
+        temp[1][0] = -temp[1][0]
+        temp[0][2] = -temp[0][2]
+        temp[1][2] = -temp[1][2]
+
+        x = x - left - origin.x
+        y = y - top - origin.y
+        let result = math.multiply(temp, [x, y, 1])
+        x = result[0] + origin.x
+        y = result[1] + origin.y
+        return { x, y }
+
     }
 
+
+    let currentTarget = this.el
+    let top = 0
+    let left = 0
+
+    while (currentTarget !== null) {
+        top += currentTarget.offsetTop
+        left += currentTarget.offsetLeft
+        currentTarget = currentTarget.offsetParent
+    }
     let style = window.getComputedStyle(this.el.parentNode)
     let transform = style.transform
     let transformOrigin = style.transformOrigin
@@ -96,21 +148,77 @@ function listenerToTouch() {
     origin.x = parseInt(originArray[0])
     origin.y = parseInt(originArray[1])
 
-    let matrixString = transform.match(/\(([^)]*)\)/)[1]
-    let stringArray = matrixString.split(',')
-    let matrix = []
-    stringArray.forEach((value) => {
-        matrix.push(parseFloat(value))
-    })
+    function getTransformMatrix(el) {
+        let matrixArray = []
+        while (el !== null && el.nodeType === 1) {
+            let style = window.getComputedStyle(el)
+            let transform = style.transform
+            if (transform !== "none") {
+                let transformOrigin = style.transformOrigin
+
+                let originArray = transformOrigin.split(' ')
+                let matrixString = transform.match(/\(([^)]*)\)/)[1]
+                let stringArray = matrixString.split(',')
+                let temp = []
+                stringArray.forEach((value) => {
+                    temp.push(parseFloat(value))
+                })
+
+                matrixArray.push([
+                    [temp[0], temp[2], temp[4]],
+                    [temp[1], temp[3], temp[5]],
+                    [0, 0, 1],
+                ])
+            }
+            el = el.parentNode
+        }
+        let finalMatrix = matrixArray.reduce((acc, value) => {
+            console.log(acc)
+            console.log(value)
+            return math.multiply(acc, value)
+        })
+
+        return finalMatrix
+    }
+    console.log(getTransformMatrix(this.el))
+    console.log('值')
+
+    // let style = window.getComputedStyle(this.el.parentNode)
+    // let transform = style.transform
+    // let transformOrigin = style.transformOrigin
+
+    // let originArray = transformOrigin.split(' ')
+    // let origin = {}
+    // origin.x = parseInt(originArray[0])
+    // origin.y = parseInt(originArray[1])
+
+    // let matrixString = transform.match(/\(([^)]*)\)/)[1]
+    // let stringArray = matrixString.split(',')
+    // let matrix = []
+    // stringArray.forEach((value) => {
+    //     matrix.push(parseFloat(value))
+    // })
 
 
     function transformFix({ x, y }) {
+        console.log(getOffsetPosition(x,y,myCanvas.el.parentNode))
         x = x - left - origin.x
         y = y - top - origin.y
-        x = matrix[0] * x + (-matrix[2] * y) + matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
-        y = (-matrix[1] * x) + matrix[3] * y + matrix[5]
-        x += origin.x
-        y += origin.y
+        // x = matrix[0] * x + (-matrix[2] * y) + matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
+        // y = (-matrix[1] * x) + matrix[3] * y + matrix[5]
+
+        let test = getTransformMatrix(myCanvas.el)
+        test[0][1] = -test[0][1]
+        test[1][0] = -test[1][0]
+        test[0][2] = -test[0][2]
+        test[1][2] = -test[1][2]
+
+        let result = math.multiply(test, [x, y, 1])
+
+
+        x = result[0] + origin.x
+        y = result[1] + origin.y
+        console.log({ x, y })
         return { x, y }
     }
 
