@@ -80,146 +80,103 @@ function listenerToMouse() {
  */
 function listenerToTouch() {
     let cache = []
-    function getOffsetPosition(x, y,el) {
-        if (cache.length >0){
 
+    function getOffsetPosition(x, y, el, data) {
+        function getVertexPosition(el) {
+            let currentTarget = el
+            let top = 0
+            let left = 0
+            while (currentTarget !== null) {
+                top += currentTarget.offsetTop
+                left += currentTarget.offsetLeft
+                currentTarget = currentTarget.offsetParent
+            }
+            return { top, left }
         }
-        let currentTarget = el
-        let top = 0
-        let left = 0
 
-        while (currentTarget !== null) {
-            top += currentTarget.offsetTop
-            left += currentTarget.offsetLeft
-            currentTarget = currentTarget.offsetParent
-        }
-
-        let style = window.getComputedStyle(el)
-        let transform = style.transform
-        let transformOrigin = style.transformOrigin
-
-        let originArray = transformOrigin.split(' ')
-        let origin = {}
-        origin.x = parseInt(originArray[0])
-        origin.y = parseInt(originArray[1])
-
-        let matrixString = transform.match(/\(([^)]*)\)/)[1]
-        let stringArray = matrixString.split(',')
-        let temp = []
-        stringArray.forEach((value) => {
-            temp.push(parseFloat(value))
-        })
-
-        temp = [
-            [temp[0], temp[2], temp[4]],
-            [temp[1], temp[3], temp[5]],
-            [0, 0, 1],
-        ]
-        temp[0][1] = -temp[0][1]
-        temp[1][0] = -temp[1][0]
-        temp[0][2] = -temp[0][2]
-        temp[1][2] = -temp[1][2]
-
-        x = x - left - origin.x
-        y = y - top - origin.y
-        let result = math.multiply(temp, [x, y, 1])
-        x = result[0] + origin.x
-        y = result[1] + origin.y
-        return { x, y }
-
-    }
-
-
-    let currentTarget = this.el
-    let top = 0
-    let left = 0
-
-    while (currentTarget !== null) {
-        top += currentTarget.offsetTop
-        left += currentTarget.offsetLeft
-        currentTarget = currentTarget.offsetParent
-    }
-    let style = window.getComputedStyle(this.el.parentNode)
-    let transform = style.transform
-    let transformOrigin = style.transformOrigin
-
-    let originArray = transformOrigin.split(' ')
-    let origin = {}
-    origin.x = parseInt(originArray[0])
-    origin.y = parseInt(originArray[1])
-
-    function getTransformMatrix(el) {
-        let matrixArray = []
-        while (el !== null && el.nodeType === 1) {
+        function getTranformData(el) {
             let style = window.getComputedStyle(el)
             let transform = style.transform
-            if (transform !== "none") {
-                let transformOrigin = style.transformOrigin
+            let transformOrigin = style.transformOrigin
 
+            let origin = { x: 0, y: 0 }
+            let matrix = math.ones([3, 3])
+            if (transform !== 'none') {
                 let originArray = transformOrigin.split(' ')
+                origin.x = parseInt(originArray[0])
+                origin.y = parseInt(originArray[1])
+
                 let matrixString = transform.match(/\(([^)]*)\)/)[1]
                 let stringArray = matrixString.split(',')
                 let temp = []
                 stringArray.forEach((value) => {
-                    temp.push(parseFloat(value))
+                    temp.push(parseFloat(value.trim()))
                 })
-
-                matrixArray.push([
+                temp = [
                     [temp[0], temp[2], temp[4]],
                     [temp[1], temp[3], temp[5]],
                     [0, 0, 1],
-                ])
+                ]
+                matrix[0][0] = 1 / temp[0][0]
+                matrix[0][1] = -temp[0][1]
+                matrix[1][0] = -temp[1][0]
+                matrix[1][1] = 1 / temp[1][1]
+                matrix[0][2] = -temp[0][2]
+                matrix[1][2] = -temp[1][2]
+            } else {
+                matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             }
-            el = el.parentNode
+            return {matrix,origin}
         }
-        let finalMatrix = matrixArray.reduce((acc, value) => {
-            console.log(acc)
-            console.log(value)
-            return math.multiply(acc, value)
-        })
 
-        return finalMatrix
+        if (el !== null && el.nodeType === 1) {
+            let { left, top } = getVertexPosition(el)
+            let transformData = getTranformData(el)
+            temp = transformData.matrix
+            origin = transformData.origin
+
+
+            // if (data.length >1){
+            //     data[0].vertex.left -= left
+            //     data[0].vertex.top -=  top 
+            // }
+            // data.unshift({
+            //     temp, origin, vertex: {
+            //         left, top
+            //     },
+            // })
+
+            data.push({
+                temp, origin, vertex: {
+                    left, top
+                },
+            })
+
+            
+        } else {
+            // data.forEach((value, index, array) => {
+            //     if (index < data.length - 1) {
+            //         value.vertex.left -= array[index + 1].vertex.left
+            //         value.vertex.top -= array[index + 1].vertex.top
+            //     }
+            // })
+            // data = data.reverse()
+            console.log(data)
+            data.forEach((obj) => {
+                let { temp, origin, vertex: { left, top } } = obj
+                x = x - left - origin.x
+                y = y - top - origin.y
+                let result = math.multiply(temp, [x, y, 1])
+                x = result[0] + origin.x
+                y = result[1] + origin.y
+            })
+            return { x, y }
+        }
+        return getOffsetPosition(x, y, el.parentNode, data)
     }
-    console.log(getTransformMatrix(this.el))
-    console.log('值')
-
-    // let style = window.getComputedStyle(this.el.parentNode)
-    // let transform = style.transform
-    // let transformOrigin = style.transformOrigin
-
-    // let originArray = transformOrigin.split(' ')
-    // let origin = {}
-    // origin.x = parseInt(originArray[0])
-    // origin.y = parseInt(originArray[1])
-
-    // let matrixString = transform.match(/\(([^)]*)\)/)[1]
-    // let stringArray = matrixString.split(',')
-    // let matrix = []
-    // stringArray.forEach((value) => {
-    //     matrix.push(parseFloat(value))
-    // })
-
 
     function transformFix({ x, y }) {
-        console.log(getOffsetPosition(x,y,myCanvas.el.parentNode))
-        x = x - left - origin.x
-        y = y - top - origin.y
-        // x = matrix[0] * x + (-matrix[2] * y) + matrix[4] //matrix(cosθ,sinθ,-sinθ,cosθ,0,0)
-        // y = (-matrix[1] * x) + matrix[3] * y + matrix[5]
-
-        let test = getTransformMatrix(myCanvas.el)
-        test[0][1] = -test[0][1]
-        test[1][0] = -test[1][0]
-        test[0][2] = -test[0][2]
-        test[1][2] = -test[1][2]
-
-        let result = math.multiply(test, [x, y, 1])
-
-
-        x = result[0] + origin.x
-        y = result[1] + origin.y
-        console.log({ x, y })
-        return { x, y }
+        return getOffsetPosition(x, y, myCanvas.el.parentNode, [])
     }
 
 
