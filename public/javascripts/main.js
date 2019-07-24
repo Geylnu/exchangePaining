@@ -79,9 +79,7 @@ function listenerToMouse() {
  * https://github.com/w3c/touch-events/issues/62
  */
 function listenerToTouch() {
-    let cache = []
-
-    function getOffsetPosition(x, y, el, data) {
+    function getOffsetPosition(x, y, elOrCache) {
         function getVertexPosition(el) {
             let currentTarget = el
             let top = 0
@@ -117,51 +115,15 @@ function listenerToTouch() {
                     [temp[1], temp[3], temp[5]],
                     [0, 0, 1],
                 ]
-                matrix[0][0] = 1 / temp[0][0]
-                matrix[0][1] = -temp[0][1]
-                matrix[1][0] = -temp[1][0]
-                matrix[1][1] = 1 / temp[1][1]
-                matrix[0][2] = -temp[0][2]
-                matrix[1][2] = -temp[1][2]
+
+                matrix = math.inv(temp)
             } else {
                 matrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             }
-            return {matrix,origin}
+            return { matrix, origin }
         }
 
-        if (el !== null && el.nodeType === 1) {
-            let { left, top } = getVertexPosition(el)
-            let transformData = getTranformData(el)
-            temp = transformData.matrix
-            origin = transformData.origin
-
-
-            // if (data.length >1){
-            //     data[0].vertex.left -= left
-            //     data[0].vertex.top -=  top 
-            // }
-            // data.unshift({
-            //     temp, origin, vertex: {
-            //         left, top
-            //     },
-            // })
-
-            data.push({
-                temp, origin, vertex: {
-                    left, top
-                },
-            })
-
-            
-        } else {
-            // data.forEach((value, index, array) => {
-            //     if (index < data.length - 1) {
-            //         value.vertex.left -= array[index + 1].vertex.left
-            //         value.vertex.top -= array[index + 1].vertex.top
-            //     }
-            // })
-            // data = data.reverse()
-            console.log(data)
+        function computPosition(data) {
             data.forEach((obj) => {
                 let { temp, origin, vertex: { left, top } } = obj
                 x = x - left - origin.x
@@ -172,11 +134,47 @@ function listenerToTouch() {
             })
             return { x, y }
         }
-        return getOffsetPosition(x, y, el.parentNode, data)
+
+        let data = []
+        if (elOrCache instanceof Node) {
+            el = elOrCache
+            while (el !== null && el.nodeType === 1) {
+                let { left, top } = getVertexPosition(el)
+                let transformData = getTranformData(el)
+                temp = transformData.matrix
+                origin = transformData.origin
+
+                if (data.length > 0) {
+                    data[0].vertex.left -= left
+                    data[0].vertex.top -= top
+                }
+                data.unshift({
+                    temp, origin, vertex: {
+                        left, top
+                    },
+                })
+                el = el.parentNode
+            }
+        }else if (elOrCache instanceof Array){
+            data = elOrCache
+        }
+        let pos =  computPosition(data)
+        return {x: pos.x,y: pos.y,data}
     }
 
+
+    let cache = null
     function transformFix({ x, y }) {
-        return getOffsetPosition(x, y, myCanvas.el.parentNode, [])
+        if (cache){
+            let position = getOffsetPosition(x, y, cache)
+            x = position.x
+            y= position.y
+        }else{
+            let position = getOffsetPosition(x, y, myCanvas.el)
+            x = position.x
+            y= position.y
+        }
+        return {x,y}
     }
 
 
