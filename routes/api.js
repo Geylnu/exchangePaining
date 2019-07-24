@@ -33,8 +33,6 @@ router.get('/painting', function (req, res, next) {
     res.json({ favour, data: JSON.parse(data) })
   }
 
-
-  let { id } = req.query
   if (!req.session.tempArray || req.session.tempArray.length === 0) {
     if (req.session.paiting) {
       let where = {
@@ -74,7 +72,16 @@ router.post('/painting', function (req, res, next) {
 });
 
 function vaildData(data) {
-  return true
+  data = JSON.parse(data)
+  let result = false
+  if (data && data.length > 0) {
+      lastStep = data[data.length - 1]
+      let time = lastStep[lastStep.length - 1].time
+      if (time > 3000) {
+          result = true
+      }
+  }
+  return result
 }
 
 

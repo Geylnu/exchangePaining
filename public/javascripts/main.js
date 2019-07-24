@@ -37,6 +37,7 @@ let myCanvas = {
     setSize,
     playBack,
     render,
+    vaildData,
 }
 
 function bindEvent() {
@@ -155,26 +156,26 @@ function listenerToTouch() {
                 })
                 el = el.parentNode
             }
-        }else if (elOrCache instanceof Array){
+        } else if (elOrCache instanceof Array) {
             data = elOrCache
         }
-        let pos =  computPosition(data)
-        return {x: pos.x,y: pos.y,data}
+        let pos = computPosition(data)
+        return { x: pos.x, y: pos.y, data }
     }
 
 
     let cache = null
     function transformFix({ x, y }) {
-        if (cache){
+        if (cache) {
             let position = getOffsetPosition(x, y, cache)
             x = position.x
-            y= position.y
-        }else{
+            y = position.y
+        } else {
             let position = getOffsetPosition(x, y, myCanvas.el)
             x = position.x
-            y= position.y
+            y = position.y
         }
-        return {x,y}
+        return { x, y }
     }
 
 
@@ -314,12 +315,26 @@ function playBack() {
     })
 }
 
+function vaildData() {
+    let data = this.data
+    let result = false
+    if (data && data.length > 0) {
+        lastStep = data[data.length - 1]
+        let time = lastStep[lastStep.length - 1].time
+        if (time > 3000) {
+            result = true
+        }
+    }
+    return result
+}
+
 function setSize() {
     this.el.width = 320
     this.el.height = 480
 }
 myCanvas.setSize()
 myCanvas.bindEvent()
+
 
 clearButton.addEventListener('click', (e) => {
     e.currentTarget.classList.add('play')
@@ -350,16 +365,18 @@ nextStep.addEventListener('click', () => {
 
 exchange.addEventListener('click', async (e) => {
     e.preventDefault
-    let test = myCanvas.data
     let path = '/api/painting'
-    let res = await axios.post(path, {
-        data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
-    })
-    if (res.status === 200) {
-        let res = await axios.get(path)
-        myCanvas.init(res.data.data)
-        myCanvas.playBack()
-    } else if (res.status === 413) {
+    if (myCanvas.vaildData()){
+        let res = await axios.post(path, {
+            data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
+        })
+        if (res.status === 200) {
+            let res = await axios.get(path)
+            myCanvas.init(res.data.data)
+            myCanvas.playBack()
+        } else if (res.status === 413) {
+            window.alert('画大小超过限制')
+        }
 
     }
 })
