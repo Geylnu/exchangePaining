@@ -7,6 +7,7 @@ let clearButton = document.querySelector('.clear')
 let lastStep = document.querySelector('.lastStep')
 let nextStep = document.querySelector('.nextStep')
 let exchange = document.querySelector('.exchange')
+let toastEl = document.querySelector('.toast')
 
 /** 阻止默认滚动事件，防止下拉等情况 */
 document.body.addEventListener('touchmove', function (e) {
@@ -292,15 +293,20 @@ function back() {
 
 function next() {
     let data = this.data
-    if (this.status = 'middle' && data[this.step + 1]) {
-        this.clear()
-        this.step++
-        for (i = 0; i <= this.step; i++) {
-            let stepArray = data[i]
-            stepArray.forEach((path) => {
-                this.drawLine(path.start, path.end)
-            })
+    if (this.status = 'middle') {
+        if (data[this.step + 1]) {
+            this.clear()
+            this.step++
+            for (i = 0; i <= this.step; i++) {
+                let stepArray = data[i]
+                stepArray.forEach((path) => {
+                    this.drawLine(path.start, path.end)
+                })
+            }
+        }else{
+            toast('已经是最后一步了')
         }
+
     }
 }
 
@@ -332,6 +338,16 @@ function setSize() {
     this.el.width = 320
     this.el.height = 480
 }
+
+
+function toast(text) {
+    toastEl.innerText = text
+    toastEl.classList.add('active')
+    toastEl.addEventListener('animationend', () => {
+        toastEl.classList.remove('active')
+    })
+}
+
 myCanvas.setSize()
 myCanvas.bindEvent()
 
@@ -364,9 +380,10 @@ nextStep.addEventListener('click', () => {
 })
 
 exchange.addEventListener('click', async (e) => {
-    e.preventDefault
+    console.log('??')
+    e.preventDefault()
     let path = '/api/painting'
-    if (myCanvas.vaildData()){
+    if (myCanvas.vaildData()) {
         let res = await axios.post(path, {
             data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
         })
@@ -375,8 +392,12 @@ exchange.addEventListener('click', async (e) => {
             myCanvas.init(res.data.data)
             myCanvas.playBack()
         } else if (res.status === 413) {
-            window.alert('画大小超过限制')
+            toast('画大小超过限制')
+        } else {
+            toast('未知错误')
         }
 
+    } else {
+        toast('画的时间太少啦！')
     }
 })
