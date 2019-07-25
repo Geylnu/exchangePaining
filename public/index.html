@@ -16,7 +16,8 @@
             <div class="paper"></div>
             <div class="paper"></div>
             <div class="paper"></div>
-            <div class="paper">
+            <div class="paper"></div>
+            <div class="paper canvas-wrapper">
                 <canvas id="myCanvas"></canvas>
             </div>
             <img src="./images/clip-blue.svg" class="clip yellow" alt="黄色夹子">
@@ -24,25 +25,42 @@
         </div>
         <div class="buttonList-wrapper">
             <div class="buttonList">
-                <svg class="icon clear" aria-hidden="true">
-                    <use xlink:href="#icon-zhongshi"></use>
-                </svg>
-                <svg class="icon lastStep" aria-hidden="true">
-                    <use xlink:href="#icon-shangyibu"></use>
-                </svg>
-                <svg class="icon nextStep" aria-hidden="true">
-                    <use xlink:href="#icon-xiayibu"></use>
-                </svg>
-                <a class="exchange">
-                    <img src="./images/exchange.png" alt="">
-                </a>
+                <div class="inner">
+                    <div class="draw list">
+                        <svg class="icon clear" aria-hidden="true">
+                            <use xlink:href="#icon-zhongshi"></use>
+                        </svg>
+                        <svg class="icon lastStep" aria-hidden="true">
+                            <use xlink:href="#icon-shangyibu"></use>
+                        </svg>
+                        <svg class="icon nextStep" aria-hidden="true">
+                            <use xlink:href="#icon-xiayibu"></use>
+                        </svg>
+                        <a class="exchange button">
+                            <img src="./images/exchange.png" alt="">
+                        </a>
+                    </div>
+                    <div class="show list">
+                        <svg class="icon back" aria-hidden="true">
+                            <use xlink:href="#icon-fanhui"></use>
+                        </svg>
+                        <div class="svgWrapper" data-favour="">
+                            <svg class="icon favour" aria-hidden="true" data-favour="5">
+                                <use xlink:href="#icon-heart"></use>
+                            </svg>
+                        </div>
+                        <a class="nextPainting button">
+                            <img src="./images/nextPainting.png" alt="">
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <script src="https://cdn.bootcss.com/mathjs/6.0.3/math.min.js"></script>
     <script src="https://cdn.bootcss.com/pako/1.0.10/pako.min.js"></script>
     <script src="https://cdn.bootcss.com/axios/0.19.0/axios.min.js"></script>
-    <script src="//at.alicdn.com/t/font_1302509_eledm7rtaus.js"></script>
+    <script src="//at.alicdn.com/t/font_1302509_lm9vq7ti51.js"></script>
     <script src="https://cdn.bootcss.com/tweenjs/1.0.2/tweenjs.min.js"></script>
     <script src="./javascripts/main.js"></script>
 </body>

@@ -8,6 +8,12 @@ let lastStep = document.querySelector('.lastStep')
 let nextStep = document.querySelector('.nextStep')
 let exchange = document.querySelector('.exchange')
 let toastEl = document.querySelector('.toast')
+let canvasWrapper = document.querySelector('.canvas-wrapper')
+let inner = document.querySelector('.buttonList .inner')
+let favourEl = document.querySelector('.favour')
+let favourWrapper = document.querySelector('.svgWrapper')
+let nextPainting = document.querySelector('.nextPainting')
+let backIndex = document.querySelector('.back')
 
 /** 阻止默认滚动事件，防止下拉等情况 */
 document.body.addEventListener('touchmove', function (e) {
@@ -39,6 +45,7 @@ let myCanvas = {
     playBack,
     render,
     vaildData,
+    stopPlay: null,
 }
 
 function bindEvent() {
@@ -71,6 +78,13 @@ function listenerToMouse() {
     this.el.addEventListener('mousemove', handleMouseMove)
     this.el.addEventListener('mouseup', handleMouseUp)
     this.el.addEventListener('mouseleave', handleMouseLeave)
+
+    this.removeEvent = ()=>{
+        this.el.removeEventListener('mousedown', handleMousedown)
+        this.el.removeEventListener('mousemove', handleMouseMove)
+        this.el.removeEventListener('mouseup', handleMouseUp)
+        this.el.removeEventListener('mouseleave', handleMouseLeave)
+    }
 }
 
 /**
@@ -203,6 +217,12 @@ function listenerToTouch() {
     this.el.addEventListener('touchstart', handleTouchStart)
     this.el.addEventListener('touchmove', handleTouchMove)
     this.el.addEventListener('touchend', handleTouchEnd)
+
+    this.removeEvent = () => {
+        this.el.removeEventListener('touchstart', handleTouchStart)
+        this.el.removeEventListener('touchmove', handleTouchMove)
+        this.el.removeEventListener('touchend', handleTouchEnd)
+    }
 }
 
 function handleDrawing(newPonit, type) {
@@ -271,6 +291,7 @@ function init(data) {
     this.tinyStep = -1
     this.time = -1
     this.status = 'normal'
+    this.clear()
 }
 
 function back() {
@@ -303,7 +324,7 @@ function next() {
                     this.drawLine(path.start, path.end)
                 })
             }
-        }else{
+        } else {
             toast('已经是最后一步了')
         }
 
@@ -312,13 +333,34 @@ function next() {
 
 function playBack() {
     this.clear()
-    this.data.forEach((step) => {
-        step.forEach((path) => {
-            window.setTimeout(() => {
-                this.drawLine(path.start, path.end)
-            }, path.time)
-        })
-    })
+    let data = this.data
+    let timerId = 0
+    let step = 0
+    let tinyStep = 0
+    let path = data[step][tinyStep]
+    let time = path.time
+
+    let render = () => {
+        this.drawLine(path.start, path.end)
+        if (tinyStep < data[step].length - 1) {
+            tinyStep++
+        } else if (step < data.length - 1) {
+            tinyStep = 0
+            step++
+        } else {
+            return
+        }
+        path = data[step][tinyStep]
+        newTime = path.time - time
+        time = path.time
+
+        timerId = window.setTimeout(render, newTime)
+    }
+
+    window.setTimeout(render, time)
+    this.stopPlay = () => {
+        window.clearTimeout(timerId)
+    }
 }
 
 function vaildData() {
@@ -351,7 +393,6 @@ function toast(text) {
 myCanvas.setSize()
 myCanvas.bindEvent()
 
-
 clearButton.addEventListener('click', (e) => {
     e.currentTarget.classList.add('play')
     myCanvas.el.classList.add('play')
@@ -379,8 +420,29 @@ nextStep.addEventListener('click', () => {
     }, 100)
 })
 
-exchange.addEventListener('click', async (e) => {
-    console.log('??')
+let favourObj = {
+    el: favourEl,
+    wrapper: favourWrapper,
+    active() {
+        this.el.classList.add('active')
+        this.wrapper.classList.add('active')
+    },
+    remove() {
+        this.el.classList.remove('active')
+        this.wrapper.classList.remove('active')
+    },
+    hangle(favour, favourNum) {
+        if (favourNum === 0) {
+            favourNum = ''
+        }
+        this.wrapper.setAttribute('data-favour', favourNum)
+        favour ? this.active() : this.remove()
+    }
+}
+
+let paintingId = ''
+
+async function exchangePainting(e) {
     e.preventDefault()
     let path = '/api/painting'
     if (myCanvas.vaildData()) {
@@ -388,16 +450,74 @@ exchange.addEventListener('click', async (e) => {
             data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
         })
         if (res.status === 200) {
+            myCanvas.removeEvent()
             let res = await axios.get(path)
-            myCanvas.init(res.data.data)
-            myCanvas.playBack()
+            canvasWrapper.classList.add('active')
+            let { data, favourNum, favour } = res.data
+            paintingId = res.data.paintingId
+            favourObj.hangle(favour, favourNum)
+            canvasWrapper.addEventListener('animationend', () => {
+                canvasWrapper.classList.remove('active')
+                myCanvas.init(data)
+                myCanvas.playBack()
+            }, { once: true })
+            inner.classList.add('active')
         } else if (res.status === 413) {
             toast('画大小超过限制')
         } else {
             toast('未知错误')
         }
-
     } else {
-        toast('画的时间太少啦！')
+        toast('画的时间太短啦！')
     }
+}
+
+let waiting = false
+exchange.addEventListener('click', exchangePainting)
+nextPainting.addEventListener('click', async (e) => {
+    if (!waiting) {
+        e.preventDefault()
+        myCanvas.stopPlay()
+        waiting = true
+        let path = '/api/painting'
+        let res = await axios.get(path)
+        canvasWrapper.classList.add('active')
+        let { data, favourNum, favour } = res.data
+        paintingId = res.data.paintingId
+        favourObj.hangle(favour, favourNum)
+        canvasWrapper.addEventListener('animationend', () => {
+            canvasWrapper.classList.remove('active')
+            myCanvas.init(data)
+            myCanvas.playBack()
+            waiting = false
+        }, { once: true })
+    } else {
+        toast('点击的太快了')
+    }
+})
+
+favourEl.addEventListener('click', async (e) => {
+    let isActive = e.currentTarget.classList.toggle('active')
+    favourWrapper.classList.toggle('active')
+    let res = await axios.post('/api/favour', {
+        data: { favour: isActive, paintingId }
+    })
+
+    let favourNum = res.data
+    if (favourNum === 0) {
+        favourNum = ''
+    }
+    favourWrapper.setAttribute('data-favour', favourNum)
+})
+
+backIndex.addEventListener('click',(e)=>{
+    inner.classList.remove('active')
+    canvasWrapper.classList.add('active')
+    canvasWrapper.addEventListener('animationend', () => {
+        canvasWrapper.classList.remove('active')
+        myCanvas.stopPlay()
+        myCanvas.init()
+        myCanvas.bindEvent()
+    }, { once: true })
+
 })

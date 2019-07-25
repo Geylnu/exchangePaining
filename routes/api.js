@@ -6,8 +6,9 @@ const Op = Sequelize.Op
 const pako = require('pako')
 
 
-const User = require('../models/user')
-const Painting = require('../models/painting')
+const UserModel = require('../models/user')
+const PaintingModel = require('../models/painting')
+const favourModel = require('../models/favour')
 const uuidv4 = require('uuid/v4');
 
 router.use(bodyParser.json({ limit: '10mb' }));
@@ -18,7 +19,7 @@ router.all('/*', function (req, res, next) {
   if (userId) {
     next()
   } else {
-    User.create({ uuid: uuidv4() }).then((user) => {
+    UserModel.create({ uuid: uuidv4() }).then((user) => {
       req.session.userId = user.uuid
       next()
     })
@@ -27,25 +28,18 @@ router.all('/*', function (req, res, next) {
 
 
 router.get('/painting', function (req, res, next) {
-  function sendJson(){
+  function sendJson() {
     let paiting = req.session.tempArray.pop()
-    let { favour, data } = paiting
-    res.json({ favour, data: JSON.parse(data) })
+    let { data, uuid } = paiting
+    getFavourTnfo(uuid, req.session.userId).then((result) => {
+      let { favourNum, favour } = result
+      res.json({ favour, data: JSON.parse(data), paintingId: uuid, favourNum })
+    })
   }
 
   if (!req.session.tempArray || req.session.tempArray.length === 0) {
     if (req.session.paiting) {
-      let where = {
-        userId: {
-          [Op.not]: req.session.userId
-        }
-      }
-      Painting.findAll({
-        limit: 20,where,
-        order: [
-          Sequelize.fn('RANDOM'),
-        ]
-      }).then((result) => {
+      getRandomPainting(req.session.userId).then((result) => {
         req.session.tempArray = result
         sendJson()
       })
@@ -57,10 +51,9 @@ router.get('/painting', function (req, res, next) {
 })
 
 router.post('/painting', function (req, res, next) {
-
   let data = pako.inflate(req.body.data, { to: 'string' })
   if (vaildData(data)) {
-    Painting.create({
+    PaintingModel.create({
       uuid: uuidv4(),
       userId: req.session.userId,
       data,
@@ -71,15 +64,78 @@ router.post('/painting', function (req, res, next) {
   }
 });
 
+router.post('/favour', function (req, res, next) {
+  let { favour, paintingId } = req.body.data
+  setFavour(paintingId, req.session.userId, favour).then((favourNum) => {
+    res.json(favourNum)
+  })
+})
+
+async function getFavourTnfo(paintingId, userId) {
+  let favourNum = await getFavourNum(paintingId)
+  let favour = await isFavour(paintingId, userId)
+  if (favour && favourNum === 0) {
+    debugger
+  }
+  return { favourNum, favour }
+}
+
+async function getFavourNum(paintingId) {
+  let where = {
+    paintingId,
+    favour: true,
+  }
+  let result = await favourModel.findAll({ where })
+  return result.length
+}
+
+async function isFavour(paintingId, userId) {
+  let where = {
+    paintingId, userId, favour: true
+  }
+  let result = await favourModel.findAll({ where })
+
+  let favour = result.length === 1
+  return favour
+}
+
+async function setFavour(paintingId, userId, favour) {
+  let findData = await favourModel.findAll({ where: { paintingId, userId } })
+  if (findData.length === 0) {
+    let result = await favourModel.create({ paintingId, userId, favour })
+    let favourNum = await getFavourNum(paintingId)
+    return favourNum
+  } else {
+    let result = await favourModel.update({ paintingId, userId, favour }, { where: { paintingId, userId } })
+    let favourNum = await getFavourNum(paintingId)
+    return favourNum
+  }
+}
+
+async function getRandomPainting(userId) {
+  let where = {
+    userId: {
+      [Op.not]: userId
+    }
+  }
+  let result = await PaintingModel.findAll({
+    limit: 20, where,
+    order: [
+      Sequelize.fn('RANDOM'),
+    ]
+  })
+  return result
+}
+
 function vaildData(data) {
   data = JSON.parse(data)
   let result = false
   if (data && data.length > 0) {
-      lastStep = data[data.length - 1]
-      let time = lastStep[lastStep.length - 1].time
-      if (time > 3000) {
-          result = true
-      }
+    lastStep = data[data.length - 1]
+    let time = lastStep[lastStep.length - 1].time
+    if (time > 3000) {
+      result = true
+    }
   }
   return result
 }

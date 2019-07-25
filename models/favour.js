@@ -6,22 +6,21 @@ const sequelize = new Sequelize({
     storage: path.resolve(__dirname,'../database/database.sqlite')
 });
 
-const Painting = sequelize.define('painting', {
-    uuid: {
+const favour = sequelize.define('favour', {
+    paintingId: {
         type: Sequelize.UUIDV4,
         allowNull: false,
-        primaryKey: true,
     },
     userId:{
         type: Sequelize.UUIDV4,
         allowNull: false,
     },
-    data: {
-        type: Sequelize.STRING,
-        allowNull: false,
+    favour:{
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
     }
 });
 
-Painting.sync()
+favour.sync()
 
-  module.exports = Painting
+  module.exports = favour
