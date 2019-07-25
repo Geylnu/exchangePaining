@@ -22,10 +22,7 @@ const User = sequelize.define('user', {
 });
 
 User.sync().then(()=>{
-    return User.create({
-        uuid: 'John',
-        role: 10
-      });
+    return User.findOrCreate({where:config})
 })
 
 module.exports = User
