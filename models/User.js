@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
-const path = require('path')
+const path = require('path');
+const config = require('../config')
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
@@ -20,6 +21,11 @@ const User = sequelize.define('user', {
     }
 });
 
-User.sync()
+User.sync().then(()=>{
+    return User.create({
+        uuid: 'John',
+        role: 10
+      });
+})
 
 module.exports = User
