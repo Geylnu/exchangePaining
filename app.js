@@ -26,11 +26,6 @@ var sess = {
   cookie: { maxAge: 31536000000 }, //一年
 }
 
-if (app.get('env') === 'production') {
-  app.set('trust proxy', 1) // trust first proxy
-  sess.cookie.secure = true // serve secure cookies
-}
-
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.File({
