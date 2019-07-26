@@ -2,3 +2,5 @@ node_modules
 .vscode
 config.js
 database.sqlite
+log
+ecosystem.config.js
