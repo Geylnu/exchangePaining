@@ -47,8 +47,6 @@ app.use(expressWinston.logger({
   ignoreRoute: function (req, res) { return false; }
 }));
 
-if ()
-
 app.disable("x-powered-by");
 app.use(logger('dev'));
 app.use(express.json());
