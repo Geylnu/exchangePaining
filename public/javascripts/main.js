@@ -500,7 +500,7 @@ let paintingId = ''
 
 async function exchangePainting(e) {
     e.preventDefault()
-    let path = '/api/painting'
+    let path = './api/painting'
     if (myCanvas.vaildData()) {
         let res = await axios.post(path, {
             data: pako.deflate(JSON.stringify(myCanvas.data), { to: 'string' })
@@ -535,7 +535,7 @@ nextPainting.addEventListener('click', async (e) => {
         e.preventDefault()
         myCanvas.stopPlay()
         waiting = true
-        let path = '/api/painting'
+        let path = './api/painting'
         let res = await axios.get(path)
         canvasWrapper.classList.add('active')
         let { data, favourNum, favour } = res.data
@@ -555,7 +555,7 @@ nextPainting.addEventListener('click', async (e) => {
 favourEl.addEventListener('click', async (e) => {
     let isActive = e.currentTarget.classList.toggle('active')
     favourWrapper.classList.toggle('active')
-    let res = await axios.post('/api/favour', {
+    let res = await axios.post('./api/favour', {
         data: { favour: isActive, paintingId }
     })
 

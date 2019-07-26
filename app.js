@@ -26,6 +26,10 @@ var sess = {
   cookie: { maxAge: 31536000000 }, //一年
 }
 
+if (app.get('env') === 'production') {
+  app.set('trust proxy', 1)
+}
+
 app.use(expressWinston.logger({
   transports: [
     new winston.transports.File({
@@ -42,6 +46,8 @@ app.use(expressWinston.logger({
   colorize: false,
   ignoreRoute: function (req, res) { return false; }
 }));
+
+if ()
 
 app.disable("x-powered-by");
 app.use(logger('dev'));
