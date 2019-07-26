@@ -38,6 +38,7 @@ let myCanvas = {
     listenerToTouch,
     handleDrawing,
     drawLine,
+    drawCurve,
     configCanvas,
     clear,
     back,
@@ -237,19 +238,21 @@ function handleDrawing(newPonit, type) {
             this.status = 'normal'
         }
         this.drawing = true
-        this.step++
-        this.data[this.step] = []
-        this.lastPoint = newPonit
+        let length = this.data.push([])
+        this.step = length-1
     } else {
         let needRecond = true
-        if (this.drawing && needRecond) {
+        if (this.drawing && (needRecond || type !== undefined)) {
             needRecond = false
             let currentTime = Date.now() - this.time
-            this.data[this.step].push({ start: this.lastPoint, end: newPonit, time: currentTime })
-            this.tinyStep++
-            this.render()
-            this.lastPoint = newPonit
-            needRecond = true
+            let {x,y} = newPonit
+            let length = this.data[this.step].push({ x,y, time: currentTime })
+            this.tinyStep = length-1
+            let lastPoint = this.render()
+            this.lastPoint = lastPoint
+            window.setTimeout(()=>{
+                needRecond = true
+            },1000/30)
         }
     }
 
@@ -257,41 +260,6 @@ function handleDrawing(newPonit, type) {
         this.drawing = false
         this.tinyStep = -1
     }
-}
-
-function drawLine(point1, point2) {
-    this.context.beginPath()
-    this.context.moveTo(point1.x, point1.y)
-    this.context.lineTo(point2.x, point2.y)
-    this.context.stroke()
-    this.context.closePath()
-}
-
-
-function configCanvas(){
-    this.context.strokeStyle = 'black'
-    this.context.lineCap = 'round'
-    this.context.lineJoin = 'round'
-    this.context.lineWidth = 6
-    this.context.shadowBlur = 2
-    this.context.shadowColor = 'rgb(0, 0, 0)'
-}
-
-function drawCurve(beginPoint, controlPoint, endPoin){
-    this.context
-}
-
-function clear() {
-    this.context.save()
-    this.context.fillStyle = 'white'
-    this.context.fillRect(0, 0, this.el.width, this.el.height);
-    this.context.restore();
-}
-
-function render() {
-    let data = this.data
-    let path = data[this.step][this.tinyStep]
-    this.drawLine(path.start, path.end)
 }
 
 function init(data) {
@@ -302,6 +270,32 @@ function init(data) {
     this.status = 'normal'
     this.configCanvas()
     this.clear()
+}
+
+function render(data,step,lastPoint) {
+    function getMiddlePonit(a,b){
+        let x = a.x + (b.x-a.x)/2
+        let y = a.y + (b.y-a.y)/2
+        return {x,y}
+    }
+
+    data = data || this.data
+    step = step || this.step
+    lastPoint = lastPoint || this.lastPoint
+    let stepArray = data[step] 
+    if (stepArray.length > 2){
+        let pointArray =  stepArray.slice(-2)
+        let endPoint = getMiddlePonit(pointArray[0],pointArray[1])
+        let middlePoint = pointArray[0]
+        this.drawCurve(lastPoint,middlePoint,endPoint)
+        lastPoint = endPoint
+    }else if (stepArray.length === 2){
+        this.drawLine(stepArray[0], stepArray[1])
+    }else  {
+        lastPoint = stepArray[0]
+        this.drawLine(stepArray[0], stepArray[0])
+    }
+    return lastPoint
 }
 
 function back() {
@@ -384,6 +378,39 @@ function vaildData() {
         }
     }
     return result
+}
+
+function drawLine(point1, point2) {
+    this.context.beginPath()
+    this.context.moveTo(point1.x, point1.y)
+    this.context.lineTo(point2.x, point2.y)
+    this.context.stroke()
+    this.context.closePath()
+}
+
+
+function configCanvas(){
+    this.context.strokeStyle = 'black'
+    this.context.lineCap = 'round'
+    this.context.lineJoin = 'round'
+    this.context.lineWidth = 6
+    this.context.shadowBlur = 2
+    this.context.shadowColor = 'rgb(0, 0, 0)'
+}
+
+function drawCurve(beginPoint, controlPoint, endPoint){
+    this.context.beginPath()
+    this.context.moveTo(beginPoint.x,beginPoint.y)
+    this.context.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
+    this.context.stroke();
+    this.context.closePath();
+}
+
+function clear() {
+    this.context.save()
+    this.context.fillStyle = 'white'
+    this.context.fillRect(0, 0, this.el.width, this.el.height);
+    this.context.restore();
 }
 
 function setSize() {
