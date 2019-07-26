@@ -288,11 +288,8 @@ function render(obj) {
 
     data = (data === undefined? this.data : data)
     step = (step === undefined? this.step :step)
-    console.log('-------------------------')
-    console.log(step, tinyStep)
     tinyStep = (tinyStep === undefined? this.tinyStep:tinyStep)
     lastPoint = (lastPoint === undefined? this.lastPoint:lastPoint)
-    console.log(step, tinyStep)
     let stepArray = data[step]
     if (tinyStep > 1) {
         let pointArray = stepArray.slice(tinyStep - 2, tinyStep)
@@ -310,7 +307,6 @@ function render(obj) {
 }
 
 function back() {
-    let data = this.data
     this.clear()
     if (this.step !== -1) {
         this.step--
@@ -354,8 +350,8 @@ function playBack() {
     let tinyStep = 0
     let lastPoint = {x:0,y:0}
     let point = data[step][tinyStep]
-    let time = point.time
-
+    let rate = getPlayRate(data)
+    let time = point.time*rate
     let render = () => {
         lastPoint =this.render({step,tinyStep,lastPoint})
         if (tinyStep < data[step].length - 1) {
@@ -367,8 +363,8 @@ function playBack() {
             return
         }
         point = data[step][tinyStep]
-        newTime = point.time - time
-        time = point.time
+        newTime = point.time*rate - time
+        time = point.time*rate
 
         timerId = window.setTimeout(render, newTime)
     }
@@ -376,6 +372,16 @@ function playBack() {
     window.setTimeout(render, time)
     this.stopPlay = () => {
         window.clearTimeout(timerId)
+    }
+
+    function getPlayRate(data){
+        let lastStep = data[data.length-1]
+        let lastTime = lastStep[lastStep.length-1].time
+        let rate = 1
+        if (lastTime > 1000*45){
+             rate = (45*1000)/lastTime
+        }
+        return rate
     }
 }
 
