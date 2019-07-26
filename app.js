@@ -3,7 +3,10 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var session = require('express-session')
+var session = require('express-session');
+const winston = require('winston');
+const expressWinston = require('express-winston');
+
 
 var apiRouter = require('./routes/api');
 
@@ -20,13 +23,30 @@ var sess = {
   rolling: true,
   resave: true,
   saveUninitialized: false,
-  cookie: { maxAge: 31536000000}, //一年
-} 
+  cookie: { maxAge: 31536000000 }, //一年
+}
 
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1) // trust first proxy
   sess.cookie.secure = true // serve secure cookies
 }
+
+app.use(expressWinston.logger({
+  transports: [
+    new winston.transports.File({
+      filename: path.resolve(__dirname, './log/winston/access.log'),
+    }),
+  ],
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.json()
+  ),
+  meta: true,
+  msg: "HTTP {{req.method}} {{req.url}}",
+  expressFormat: true,
+  colorize: false,
+  ignoreRoute: function (req, res) { return false; }
+}));
 
 app.disable("x-powered-by");
 app.use(logger('dev'));
@@ -38,13 +58,28 @@ app.use(session(sess))
 
 app.use('/api', apiRouter);
 
+app.use(expressWinston.errorLogger({
+  transports: [
+    new winston.transports.File({
+      filename: path.resolve(__dirname, './log/winston/error.log'),
+    }),
+  ],
+  format: winston.format.combine(
+    winston.format.colorize(),
+    winston.format.json()
+  ),
+  dumpExceptions: true,
+  showStack: true
+}));
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   next(createError(404));
 });
 
+
+
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -53,5 +88,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;

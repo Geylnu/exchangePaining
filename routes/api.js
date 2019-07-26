@@ -30,11 +30,16 @@ router.all('/*', function (req, res, next) {
 router.get('/painting', function (req, res, next) {
   function sendJson() {
     let paiting = req.session.tempArray.pop()
-    let { data, uuid } = paiting
-    getFavourTnfo(uuid, req.session.userId).then((result) => {
-      let { favourNum, favour } = result
-      res.json({ favour, data: JSON.parse(data), paintingId: uuid, favourNum })
-    })
+    if (!paiting){
+      res.status = 500
+      res.json({data:null})
+    }else{
+      let { data, uuid } = paiting
+      getFavourTnfo(uuid, req.session.userId).then((result) => {
+        let { favourNum, favour } = result
+        res.json({ favour, data: JSON.parse(data), paintingId: uuid, favourNum })
+      })
+    }
   }
 
   if (!req.session.tempArray || req.session.tempArray.length === 0) {

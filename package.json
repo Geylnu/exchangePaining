@@ -11,11 +11,14 @@
     "ejs": "~2.6.1",
     "express": "~4.16.1",
     "express-session": "^1.16.2",
+    "express-winston": "^3.2.1",
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "pako": "^1.0.10",
+    "save": "^2.4.0",
     "sequelize": "^5.10.1",
     "sqlite3": "^4.0.9",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "winston": "^3.2.1"
   }
 }
