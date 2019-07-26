@@ -37,10 +37,11 @@ let myCanvas = {
     listenerToMouse,
     listenerToTouch,
     handleDrawing,
+    drawLine,
+    configCanvas,
     clear,
     back,
     next,
-    drawLine,
     setSize,
     playBack,
     render,
@@ -260,16 +261,24 @@ function handleDrawing(newPonit, type) {
 
 function drawLine(point1, point2) {
     this.context.beginPath()
+    this.context.moveTo(point1.x, point1.y)
+    this.context.lineTo(point2.x, point2.y)
+    this.context.stroke()
+    this.context.closePath()
+}
+
+
+function configCanvas(){
     this.context.strokeStyle = 'black'
     this.context.lineCap = 'round'
     this.context.lineJoin = 'round'
     this.context.lineWidth = 6
-    this.context.moveTo(point1.x, point1.y)
-    this.context.lineTo(point2.x, point2.y)
     this.context.shadowBlur = 2
     this.context.shadowColor = 'rgb(0, 0, 0)'
-    this.context.stroke()
-    this.context.closePath()
+}
+
+function drawCurve(beginPoint, controlPoint, endPoin){
+    this.context
 }
 
 function clear() {
@@ -291,6 +300,7 @@ function init(data) {
     this.tinyStep = -1
     this.time = -1
     this.status = 'normal'
+    this.configCanvas()
     this.clear()
 }
 
@@ -392,6 +402,7 @@ function toast(text) {
 
 myCanvas.setSize()
 myCanvas.bindEvent()
+myCanvas.init()
 
 clearButton.addEventListener('click', (e) => {
     e.currentTarget.classList.add('play')
