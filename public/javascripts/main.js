@@ -81,7 +81,7 @@ function listenerToMouse() {
     this.el.addEventListener('mouseup', handleMouseUp)
     this.el.addEventListener('mouseleave', handleMouseLeave)
 
-    this.removeEvent = ()=>{
+    this.removeEvent = () => {
         this.el.removeEventListener('mousedown', handleMousedown)
         this.el.removeEventListener('mousemove', handleMouseMove)
         this.el.removeEventListener('mouseup', handleMouseUp)
@@ -239,20 +239,20 @@ function handleDrawing(newPonit, type) {
         }
         this.drawing = true
         let length = this.data.push([])
-        this.step = length-1
+        this.step = length - 1
     } else {
         let needRecond = true
         if (this.drawing && (needRecond || type !== undefined)) {
             needRecond = false
             let currentTime = Date.now() - this.time
-            let {x,y} = newPonit
-            let length = this.data[this.step].push({ x,y, time: currentTime })
-            this.tinyStep = length-1
+            let { x, y } = newPonit
+            let length = this.data[this.step].push({ x, y, time: currentTime })
+            this.tinyStep = length - 1
             let lastPoint = this.render()
             this.lastPoint = lastPoint
-            window.setTimeout(()=>{
+            window.setTimeout(() => {
                 needRecond = true
-            },1000/30)
+            }, 1000 / 30)
         }
     }
 
@@ -268,31 +268,42 @@ function init(data) {
     this.tinyStep = -1
     this.time = -1
     this.status = 'normal'
+    this.lastPoint = {x:0,y:0}
     this.configCanvas()
     this.clear()
 }
 
-function render(data,step,lastPoint) {
-    function getMiddlePonit(a,b){
-        let x = a.x + (b.x-a.x)/2
-        let y = a.y + (b.y-a.y)/2
-        return {x,y}
+function render(obj) {
+    function getMiddlePonit(a, b) {
+        let x = a.x + (b.x - a.x) / 2
+        let y = a.y + (b.y - a.y) / 2
+        return { x, y }
     }
 
-    data = data || this.data
-    step = step || this.step
-    lastPoint = lastPoint || this.lastPoint
-    let stepArray = data[step] 
-    if (stepArray.length > 2){
-        let pointArray =  stepArray.slice(-2)
-        let endPoint = getMiddlePonit(pointArray[0],pointArray[1])
+    obj = obj || {}
+    let data = obj.data
+    let lastPoint = obj.lastPoint
+    let step = obj.step
+    let tinyStep = obj.tinyStep
+
+    data = (data === undefined? this.data : data)
+    step = (step === undefined? this.step :step)
+    console.log('-------------------------')
+    console.log(step, tinyStep)
+    tinyStep = (tinyStep === undefined? this.tinyStep:tinyStep)
+    lastPoint = (lastPoint === undefined? this.lastPoint:lastPoint)
+    console.log(step, tinyStep)
+    let stepArray = data[step]
+    if (tinyStep > 1) {
+        let pointArray = stepArray.slice(tinyStep - 2, tinyStep)
+        let endPoint = getMiddlePonit(pointArray[0], pointArray[1])
         let middlePoint = pointArray[0]
-        this.drawCurve(lastPoint,middlePoint,endPoint)
+        this.drawCurve(lastPoint, middlePoint, endPoint)
         lastPoint = endPoint
-    }else if (stepArray.length === 2){
+    } else if (tinyStep === 1) {
         this.drawLine(stepArray[0], stepArray[1])
-    }else  {
-        lastPoint = stepArray[0]
+    } else {
+        lastPoint = stepArray[tinyStep]
         this.drawLine(stepArray[0], stepArray[0])
     }
     return lastPoint
@@ -303,11 +314,12 @@ function back() {
     this.clear()
     if (this.step !== -1) {
         this.step--
+        this.tinyStep = 0
+        this.lastPoint = { x: 0, y: 0 }
         this.status = 'middle'
-        for (i = 0; i <= this.step; i++) {
-            let stepArray = data[i]
-            stepArray.forEach((path) => {
-                this.drawLine(path.start, path.end)
+        for (let i = 0; i <= this.step; i++) {
+            this.data[i].forEach((point, index) => {
+                this.lastPoint = this.render({ step: i, tinyStep: index })
             })
         }
     } else {
@@ -322,11 +334,10 @@ function next() {
         if (data[this.step + 1]) {
             this.clear()
             this.step++
-            for (i = 0; i <= this.step; i++) {
-                let stepArray = data[i]
-                stepArray.forEach((path) => {
-                    this.drawLine(path.start, path.end)
-                })
+            for (let i = 0; i <= this.step; i++) {
+                this.data[i].forEach((point, index) => {
+                    this.lastPoint = this.render({ step: i, tinyStep: index })
+                })  
             }
         } else {
             toast('已经是最后一步了')
@@ -341,11 +352,12 @@ function playBack() {
     let timerId = 0
     let step = 0
     let tinyStep = 0
-    let path = data[step][tinyStep]
-    let time = path.time
+    let lastPoint = {x:0,y:0}
+    let point = data[step][tinyStep]
+    let time = point.time
 
     let render = () => {
-        this.drawLine(path.start, path.end)
+        lastPoint =this.render({step,tinyStep,lastPoint})
         if (tinyStep < data[step].length - 1) {
             tinyStep++
         } else if (step < data.length - 1) {
@@ -354,9 +366,9 @@ function playBack() {
         } else {
             return
         }
-        path = data[step][tinyStep]
-        newTime = path.time - time
-        time = path.time
+        point = data[step][tinyStep]
+        newTime = point.time - time
+        time = point.time
 
         timerId = window.setTimeout(render, newTime)
     }
@@ -389,7 +401,7 @@ function drawLine(point1, point2) {
 }
 
 
-function configCanvas(){
+function configCanvas() {
     this.context.strokeStyle = 'black'
     this.context.lineCap = 'round'
     this.context.lineJoin = 'round'
@@ -398,9 +410,9 @@ function configCanvas(){
     this.context.shadowColor = 'rgb(0, 0, 0)'
 }
 
-function drawCurve(beginPoint, controlPoint, endPoint){
+function drawCurve(beginPoint, controlPoint, endPoint) {
     this.context.beginPath()
-    this.context.moveTo(beginPoint.x,beginPoint.y)
+    this.context.moveTo(beginPoint.x, beginPoint.y)
     this.context.quadraticCurveTo(controlPoint.x, controlPoint.y, endPoint.x, endPoint.y);
     this.context.stroke();
     this.context.closePath();
@@ -548,7 +560,7 @@ favourEl.addEventListener('click', async (e) => {
     favourWrapper.setAttribute('data-favour', favourNum)
 })
 
-backIndex.addEventListener('click',(e)=>{
+backIndex.addEventListener('click', (e) => {
     inner.classList.remove('active')
     canvasWrapper.classList.add('active')
     canvasWrapper.addEventListener('animationend', () => {
