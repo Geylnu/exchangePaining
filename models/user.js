@@ -1,6 +1,5 @@
 const Sequelize = require('sequelize');
 const path = require('path');
-const config = require('../config')
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
@@ -21,8 +20,6 @@ const User = sequelize.define('user', {
     }
 });
 
-User.sync().then(()=>{
-    return User.findOrCreate({where:config})
-})
+User.sync().then()
 
 module.exports = User
