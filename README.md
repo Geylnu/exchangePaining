@@ -20,7 +20,7 @@
 ``` bash
 git clone git@github.com:Geylnu/exchangePaining.git
 cd exchangePaining
-touch ./database.sqlite
+mkdir database && touch ./database/database.sqlite
 npm install
 npm start
 ```
