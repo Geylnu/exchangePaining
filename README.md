@@ -16,7 +16,7 @@
 * [ ] 迁移至小程序
 * [ ] 绘画曲线防抖
 
-## 开始使用
+## 本地预览
 ``` bash
 git clone git@github.com:Geylnu/exchangePaining.git
 cd exchangePaining
