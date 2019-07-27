@@ -1,4 +1,4 @@
-模仿即刻一画换一画制作的在线画板
+模仿即刻一画换一画制作的在线画板 预览:<https://geylnu.com/canvas>
 
 * 前端: 原生js
 * 后端：express
